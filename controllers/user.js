@@ -449,7 +449,8 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getOtp = async (req, res) => {
   try {
-    if (!req.body.mobile) {
+    const { mobile } = req.body;
+    if (!mobile) {
       return res.status(400).json({
         status: "error",
         message: "Failed to send OTP.",
@@ -477,7 +478,14 @@ exports.getOtp = async (req, res) => {
 
     const encryptedOTP = await bcrypt.hash(otp, 10);
     try {
-      await sendOTP(req.body.mobile, message);
+      await sendOTP(mobile, message);
+      res.status(200).json({
+        status: "success",
+        message: "OTP sent successfully.",
+        data: {
+          otp: encryptedOTP,
+        },
+      });
     } catch (error) {
       return res.status(400).json({
         status: "error",
@@ -488,14 +496,9 @@ exports.getOtp = async (req, res) => {
         },
       });
     }
-    res.status(200).json({
-      status: "success",
-      message: "OTP sent successfully.",
-      data: {
-        otp: encryptedOTP,
-      },
-    });
+    
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       status: "error",
       message: "Internal Server Error",
