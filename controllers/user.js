@@ -41,7 +41,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    if (!/^[0-9]+$/.test(int(mobile)) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
@@ -86,7 +86,7 @@ exports.register = async (req, res) => {
       email,
       password,
       phone: mobile,
-      imageUrl : avatar,
+      imageUrl: avatar,
       standard,
       streams,
       isUserVerified,
@@ -103,6 +103,7 @@ exports.register = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       status: "error",
       message: "Internal Server Error",
@@ -159,10 +160,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    if (!/^[0-9]+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
       return res.status(400).json({
         status: "error",
-        message: "Login failed.",
+        message: "Failed to register user.",
         error: {
           code: "INVALID_FORMAT",
           details: "The phone number format is invalid.",
@@ -445,10 +446,10 @@ exports.getOtp = async (req, res) => {
       });
     }
 
-    if (!/^[0-9]+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
       return res.status(400).json({
         status: "error",
-        message: "Failed to send OTP.",
+        message: "Failed to register user.",
         error: {
           code: "INVALID_FORMAT",
           details: "The phone number format is invalid.",
@@ -554,13 +555,13 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    if (!/^[0-9]+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
       return res.status(400).json({
         status: "error",
-        message: "Password reset failed.",
+        message: "Failed to register user.",
         error: {
-          code: "INVALID_PHONE_NUMBER",
-          details: "The phone number provided is not valid.",
+          code: "INVALID_FORMAT",
+          details: "The phone number format is invalid.",
         },
       });
     }
@@ -702,7 +703,7 @@ exports.getAvatar = async (req, res) => {
       status: "success",
       message: "Avatar URLs fetched successfully.",
       data: {
-        avatars: avatars
+        avatars: avatars,
       },
     });
   } catch (error) {
@@ -716,4 +717,4 @@ exports.getAvatar = async (req, res) => {
       },
     });
   }
-}
+};
