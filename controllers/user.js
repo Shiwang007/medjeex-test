@@ -41,7 +41,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || !(mobile.length < 11)) {
+      console.log(!/^\d+$/.test(mobile));
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
@@ -160,7 +161,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || !(mobile.length < 11)) {
+      console.log(!/^\d+$/.test(mobile));
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
@@ -446,7 +448,8 @@ exports.getOtp = async (req, res) => {
       });
     }
 
-    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || !(mobile.length < 11)) {
+      console.log(!/^\d+$/.test(mobile));
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
@@ -555,7 +558,8 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    if (!/^\d+$/.test(mobile) || mobile.length < 11) {
+    if (!/^\d+$/.test(mobile) || !(mobile.length < 11)) {
+      console.log(!/^\d+$/.test(mobile));
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
