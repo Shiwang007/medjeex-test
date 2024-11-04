@@ -374,14 +374,7 @@ exports.updateProfile = async (req, res) => {
 
 exports.deleteMyProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-
-    await user.deleteOne();
-    // logout User after deleting profile.
-    res.cookie("token", null, {
-      expires: new Date(Date.now()),
-      httpOnly: true,
-    });
+    await User.deleteOne({ _id: req.user._id });
 
     res.status(200).json({
       success: true,
