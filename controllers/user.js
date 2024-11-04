@@ -373,7 +373,7 @@ exports.updateProfile = async (req, res) => {
 
 exports.deleteMyProfile = async (req, res) => {
   try {
-    await User.deleteOne({ _id: req.user._id });
+    await User.deleteOne({ _id: req.user });
 
     res.status(200).json({
       success: true,
