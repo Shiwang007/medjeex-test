@@ -221,7 +221,6 @@ exports.login = async (req, res) => {
 
     const accesstoken = await user.generateToken();
     const refreshtoken = await user.generateRefreshToken();
-    console.log(accesstoken, refreshtoken);
 
     user.refreshToken = await encryptRefreshToken(refreshtoken);
     await user.save();

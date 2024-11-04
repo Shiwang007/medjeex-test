@@ -83,12 +83,10 @@ userSchema.methods.matchPassword = async function (password) {
 };
 
 userSchema.methods.generateToken = async function () {
-  console.log(process.env.JWT_SECRET_ACCESS_TOKEN);
   return await jwt.sign({ _id: this._id }, process.env.JWT_SECRET_ACCESS_TOKEN, {expiresIn: "2m"});
 };
 
 userSchema.methods.generateRefreshToken = async function () {
-  console.log(process.env.JWT_SECRET_REFRESH_TOKEN);
   return await jwt.sign(
     { _id: this._id },
     process.env.JWT_SECRET_REFRESH_TOKEN,
@@ -98,7 +96,6 @@ userSchema.methods.generateRefreshToken = async function () {
 
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
-  console.log(resetToken);
   this.resetPasswordToken = crypto
     .createHash("sha256")
     .update(resetToken)
@@ -108,7 +105,6 @@ userSchema.methods.getResetPasswordToken = function () {
 };
 userSchema.methods.getVerifyToken = function () {
   const token = crypto.randomBytes(20).toString("hex");
-  console.log(token);
   this.verifyToken = crypto.createHash("sha256").update(token).digest("hex");
   this.verifyTokenExpire = Date.now() + 10 * 60 * 1000;
   return token;
