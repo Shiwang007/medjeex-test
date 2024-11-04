@@ -55,16 +55,28 @@ exports.register = async (req, res) => {
 
     let user = await User.findOne({ phone: mobile, email: email });
 
-    if (user && user.isUserVerified) {
-      return res.status(400).json({
-        status: "error",
-        message: "Failed to register user.",
-        error: {
-          code: "USER_ALREADY_EXISTS",
-          details:
-            "An account with this mobile number or email already exists.",
-        },
-      });
+    if (user) {
+      if (user.isUserVerified) {
+        return res.status(400).json({
+          status: "error",
+          message: "Failed to register user.",
+          error: {
+            code: "USER_ALREADY_EXISTS",
+            details:
+              "An account with this mobile number or email already exists.",
+          },
+        });
+      } else {
+        return res.status(400).json({
+          status: "error",
+          message: "Failed to register user.",
+          error: {
+            code: "USER_ALREADY_EXISTS_BUT_USER_NOT_VERIFIED",
+            details:
+              "An account with this mobile number or email already exists. But user not verified.",
+          },
+        });
+      }
     }
 
     if (
