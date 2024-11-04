@@ -14,7 +14,7 @@ exports.register = async (req, res) => {
       username,
       email,
       password,
-      imageUrl,
+      avatar,
       mobile,
       streams,
       standard,
@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
       !username ||
       !email ||
       !password ||
-      !imageUrl ||
+      !avatar ||
       streams.length === 0 ||
       !standard ||
       isUserVerified === undefined ||
@@ -41,7 +41,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    if (!/^[0-9]+$/.test(mobile) || mobile.length < 11) {
+    if (!/^[0-9]+$/.test(int(mobile)) || mobile.length < 11) {
       return res.status(400).json({
         status: "error",
         message: "Failed to register user.",
@@ -86,7 +86,7 @@ exports.register = async (req, res) => {
       email,
       password,
       phone: mobile,
-      imageUrl,
+      imageUrl : avatar,
       standard,
       streams,
       isUserVerified,
