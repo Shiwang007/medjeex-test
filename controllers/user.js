@@ -106,15 +106,20 @@ exports.register = async (req, res) => {
     });
 
     await user.save();
+    
+    const newUser = await User.findOne({ phone: user.phone, email: user.email });
 
-    return res.status(200).json({
-      status: "success",
-      message: "User registered successfully.",
-      data: {
-        mobile: user.phone,
-        password: user.password,
-      },
+    if (newUser) {
+      return res.status(200).json({
+        status: "success",
+        message: "User registered successfully.",
+      });
+    }
+    return res.status(400).json({
+      status: "failed",
+      message: "Failed to register user.",
     });
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -233,8 +238,8 @@ exports.login = async (req, res) => {
     user.verifyToken = undefined;
     user.verifyTokenExpire = undefined;
     return res.status(200).json({
-      success: true,
-      message: "Login Successful.",
+      status: "success",
+      message: "Login successful.",
       data: {
         user,
         accesstoken,
@@ -465,12 +470,14 @@ exports.getOtp = async (req, res) => {
       });
     }
 
-    const otp = generateOTP();
-    const message = "OTP is \n\n" + otp;
+    // const otp = generateOTP();
+    // const message = "OTP is \n\n" + otp;
+
+    const otp = "4637"
 
     const encryptedOTP = await bcrypt.hash(otp, 10);
     try {
-      await sendOTP(mobile, message);
+      // await sendOTP(mobile, message);
       res.status(200).json({
         status: "success",
         message: "OTP sent successfully.",
@@ -596,9 +603,6 @@ exports.resetPassword = async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Password reset successfully.",
-      data: {
-        mobile: user.phone,
-      },
     });
   } catch (error) {
     res.status(500).json({

@@ -6,11 +6,12 @@ const router = express.Router();
 
 router.route("/register").post(register);
 
-router.route("/login/email").post(login);
+router.route("/login").post(login);
 
-router.route("/register/google").post(registerWithGoogle);
+// router.route("/register/google").post(registerWithGoogle);
 
-router.route("/login/google").post(loginWithGoogle);
+// router.route("/login/google").post(loginWithGoogle);
+
 router.route("/logout").get(authMiddleware, logout);
 
 router.route("/update/password").post(authenticate, updatePassword);
