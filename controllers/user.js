@@ -53,7 +53,10 @@ exports.register = async (req, res) => {
       });
     }
 
-    let user = await User.findOne({ phone: mobile, email: email });
+    let user = await User.findOne({
+      $or: [{ phone: mobile }, { email: email }],
+    });
+    
 
     if (user) {
       if (user.isUserVerified) {
@@ -107,7 +110,7 @@ exports.register = async (req, res) => {
 
     await user.save();
     
-    const newUser = await User.findOne({ phone: user.phone, email: user.email });
+    const newUser = await User.findOne({ phone: user.phone});
 
     if (newUser) {
       return res.status(200).json({
