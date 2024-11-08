@@ -12,10 +12,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Importing routes
-const user = require("./routes/user");
+const userRouter = require("./routes/user");
+const testSeriesRouter = require("./routes/test-series");
 
 
 // using routes
-app.use("/api/v1", user);
+app.use("/api/v1", userRouter);
+app.use("/api/v1", testSeriesRouter);
 
 module.exports = app;
