@@ -5,9 +5,9 @@ const User = require("../models/user");
 
 exports.getPurchasedTestSeries = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findById(userId).populate({
+    const user = await User.findById(_id).populate({
       path: "purchasedTestSeries.testSeriesId",
       model: "TestSeries",
       match: { testSeriesId: { $exists: true } },
@@ -83,9 +83,9 @@ exports.getPurchasedTestSeries = async (req, res) => {
 
 exports.getRecommendedTestSeries = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { _id } = req.user;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(_id);
 
     if (!user) {
       return res.status(404).json({
@@ -165,7 +165,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
 
 exports.getAITSTestPapers = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { _id } = req.user;
     const { testSeriesId } = req.body;
 
     if (!testSeriesId) {
@@ -175,7 +175,7 @@ exports.getAITSTestPapers = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -248,7 +248,7 @@ exports.getAITSTestPapers = async (req, res) => {
 
 exports.getMockTestPapers = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { _id } = req.user;
     const { testSeriesId } = req.body;
 
     if (!testSeriesId) {
@@ -258,7 +258,7 @@ exports.getMockTestPapers = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(_id);
     if (!user) {
       return res.status(404).json({
         success: false,
