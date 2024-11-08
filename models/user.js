@@ -31,11 +31,13 @@ const userSchema = new mongoose.Schema({
     default: "11th",
     enum: ["8th", "9th", "10th", "11th", "12th", "dropper"],
   },
-  streams: [{
-    type: String,
-    required: [true, "Please provide your Stream"],
-    enum: ["jee", "neet", "foundation"],
-  }],
+  streams: [
+    {
+      type: String,
+      required: [true, "Please provide your Stream"],
+      enum: ["jee", "neet", "foundation"],
+    },
+  ],
   password: {
     type: String,
     required: [true, "Please enter a Password"],
@@ -56,15 +58,38 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
-  purchasedCourses: [{
-    type: String
-  }],
-  purchasedTestSeries: [{
-    type: String
-  }],
-  purchasedMaterials: [{
-    type: String
-  }],
+  purchasedCourses: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Courses",
+      required: false,
+    },
+  ],
+  purchasedTestSeries: [
+    {
+      testSeriesId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "TestSeries",
+        required: false,
+        index: true,
+      },
+      attemptedTestPapers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "TestPaper",
+          required: false,
+          index: true,
+        },
+      ],
+    },
+  ],
+  purchasedMaterials: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Materials",
+      required: false,
+    },
+  ],
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   verifyToken: String,

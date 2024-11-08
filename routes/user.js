@@ -26,9 +26,8 @@ router.route("/password/forgot").post(getOtp);
 
 router.route("/password/reset/").post(resetPassword);
 
-// router.route("/verify/email/:token").get(verifyEmail);
 router.route("/get-otp").post(getOtp);
-// router.route("/verify-otp").post(verifyOtp);
+
 router.route("/new-access-token").get( authMiddleware, newAccessToken);
 router.route("/avatars").get(getAvatar);
 

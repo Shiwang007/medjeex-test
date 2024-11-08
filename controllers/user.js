@@ -688,7 +688,6 @@ exports.newAccessToken = async (req, res) => {
         .status(403)
         .json({ success: false, message: "Invalid refresh token" });
 
-    // Generate a new access token
     const accesstoken = await user.generateToken();
 
     return res
