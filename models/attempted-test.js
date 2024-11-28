@@ -23,27 +23,41 @@ const attemptedTestSchema = new mongoose.Schema(
     questionArr: [
       {
         questionId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "Question",
+          index: true,
+        },
+        selectedAnswer: {
           type: String,
           required: true,
+          default: ""
         },
-        selectedOption: {
-          type: String,
+        markedForReview: {
+          type: Boolean,
           required: true,
+          default: false,
         },
-        correctOption: {
-          type: String,
+        isSaved: {
+          type: Boolean,
           required: true,
-        },
+          default: false,
+        }
       },
     ],
-    timeTaken: {
+    testStartedAt: {
       type: Date,
       required: true,
     },
-    attemptedAt: {
+    testSubmittedAt: {
       type: Date,
-      default: Date.now,
+      required: false,
     },
+    testSubmitted: {
+      type: Boolean,
+      required: true,
+      default: false,
+    }
   },
   {
     timestamps: true,

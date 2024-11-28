@@ -107,7 +107,11 @@ userSchema.methods.matchPassword = async function (password) {
 };
 
 userSchema.methods.generateToken = async function () {
-  return await jwt.sign({ _id: this._id }, process.env.JWT_SECRET_ACCESS_TOKEN, {expiresIn: "2m"});
+  return await jwt.sign(
+    { _id: this._id },
+    process.env.JWT_SECRET_ACCESS_TOKEN,
+    { expiresIn: "2m" }
+  );
 };
 
 userSchema.methods.generateRefreshToken = async function () {
@@ -116,7 +120,7 @@ userSchema.methods.generateRefreshToken = async function () {
     process.env.JWT_SECRET_REFRESH_TOKEN,
     { expiresIn: "4h" }
   );
-}
+};
 
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");

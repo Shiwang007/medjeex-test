@@ -61,7 +61,14 @@ const testPaperSchema = new mongoose.Schema(
       {
         type: String,
         required: true,
-        enum: ["Physics", "Chemistry", "Math", "Botany", "Science", "Zoology"],
+        enum: [
+          "Physics",
+          "Chemistry",
+          "Mathematics",
+          "Botany",
+          "Science",
+          "Zoology",
+        ],
       },
     ],
     negativeMarking: {
@@ -71,6 +78,11 @@ const testPaperSchema = new mongoose.Schema(
     },
     testPaperCreatedBy: {
       type: String,
+      required: true,
+    },
+    testPaperCreatorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CompanyUser",
       required: true,
     },
   },

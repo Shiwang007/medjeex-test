@@ -52,7 +52,7 @@ const testSeriesSchema = new mongoose.Schema(
           "Zoology",
         ],
         required: true,
-        maxLength: 9,
+        maxLength: 14,
       },
     ],
     totalTest: {
@@ -83,10 +83,15 @@ const testSeriesSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    published: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     testSeriesCreatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "CompanyUser",
-      required: true,
+      required: false,
     },
   },
   {

@@ -218,7 +218,7 @@ exports.login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch)
-      res.status(400).json({
+      return res.status(400).json({
         status: "error",
         message: "Login failed.",
         error: {
