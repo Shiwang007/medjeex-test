@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.post("/users-test-series", authenticate, getPurchasedTestSeries);
 router.post("/recommended-test-series", authenticate, getRecommendedTestSeries);
-router.post("/aits-test-papers", getAITSTestPapers);
-router.post("/mock-test-papers", getMockTestPapers);
-router.post("/questions", getQuestions);
-router.post("/purchase-test-series", purchasedTestSeries);
+router.post("/aits-test-papers", authenticate, getAITSTestPapers);
+router.post("/mock-test-papers", authenticate, getMockTestPapers);
+router.post("/questions", authenticate, getQuestions);
+router.post("/purchase-test-series", authenticate, purchasedTestSeries);
 
 module.exports = router;
