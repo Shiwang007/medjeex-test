@@ -9,13 +9,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
   try {
     const { _id } = req.user;
 
-    const user = await User.findById(_id).populate({
-      path: "purchasedTestSeries.testSeriesId",
-      model: "TestSeries",
-      match: { testSeriesId: { $exists: true } },
-      select:
-        "testSeriesId title features tags imageUrls totalTest description testSeriesType",
-    });
+    const user = await User.findById(_id);
 
     if (!user) {
       return res.status(404).json({
@@ -28,9 +22,32 @@ exports.getPurchasedTestSeries = async (req, res) => {
       });
     }
 
-    const testSeriesIds = user.purchasedTestSeries.map(
-      (series) => series.testSeriesId.testSeriesId
+    const purchasedSeriesMap = user.purchasedTestSeries.reduce(
+      (acc, series) => {
+        acc[series.testSeriesId.toString()] = series.attemptedTestPapers || [];
+        return acc;
+      },
+      {}
     );
+
+    const testSeriesIds = Object.keys(purchasedSeriesMap);
+
+    const testSeriesData = await TestSeries.find({
+      testSeriesId: { $in: testSeriesIds },
+    }).select(
+      "testSeriesId title features tags imageUrls totalTest description testSeriesType"
+    );
+
+    if (testSeriesData.length <= 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "No purchased test series found.",
+        error: {
+          code: "NO_TEST_SERIES",
+          details: "The user has not purchased any test series yet.",
+        },
+      });
+    }
 
     const testPaperData = await TestPaper.aggregate([
       {
@@ -47,33 +64,34 @@ exports.getPurchasedTestSeries = async (req, res) => {
     ]);
 
     const totalQuestionsMap = testPaperData.reduce((acc, item) => {
-      acc[item._id.toString()] = item.totalQuestionsSum;
+      acc[item._id] = item.totalQuestionsSum;
       return acc;
     }, {});
 
-    const purchasedTestSeries = user.purchasedTestSeries.map((series) => {
-      const { testSeriesId, attemptedTestPapers } = series;
-      const totalQuestions =
-        totalQuestionsMap[testSeriesId.testSeriesId.toString()] || 0;
+    const purchasedTestSeries = testSeriesData.map((series) => {
+      const testSeriesId = series.testSeriesId;
+      const attemptedTestPapers =
+        purchasedSeriesMap[testSeriesId?.toString()] || [];
+      const totalQuestions = totalQuestionsMap[testSeriesId] || 0;
 
       return {
-        testSeriesId: testSeriesId.testSeriesId,
-        title: testSeriesId.title,
-        highlightPoints: testSeriesId.features,
-        descriptionPoints: testSeriesId.description,
-        testSeriesType: testSeriesId.testSeriesType,
-        subjectsTags: testSeriesId.tags,
-        allImageUrls: testSeriesId.imageUrls,
-        completedTestCount: attemptedTestPapers.length,
+        testSeriesId: series.testSeriesId || null,
+        title: series.title || "",
+        highlightPoints: series.features || [],
+        descriptionPoints: series.description || "",
+        testSeriesType: series.testSeriesType || "",
+        subjectsTags: series.tags || [],
+        allImageUrls: series.imageUrls || [],
+        completedTestCount: attemptedTestPapers.length, 
         indicators: [
           {
             key: "subjectIncluded",
-            value: testSeriesId.tags.length,
+            value: series.tags?.length || 0,
             displayName: "Subjects Included",
           },
           {
             key: "totalTests",
-            value: testSeriesId.totalTest,
+            value: series.totalTest || 0,
             displayName: "Total Tests",
           },
           {
@@ -82,8 +100,8 @@ exports.getPurchasedTestSeries = async (req, res) => {
             displayName: "Total Questions",
           },
         ],
-        purchaseDate: "",
-        validityPeriod: {},
+        purchaseDate: series.purchaseDate || "",
+        validityPeriod: series.validityPeriod || {},
         isPurchased: true,
       };
     });
@@ -99,6 +117,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
       });
     }
 
+    // Return the response with the purchased test series data
     return res.status(200).json({
       status: "success",
       message: "Purchased Test Series fetched successfully",
@@ -112,6 +131,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
     });
   }
 };
+
 
 exports.getRecommendedTestSeries = async (req, res) => {
   try {
