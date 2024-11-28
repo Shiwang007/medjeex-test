@@ -110,7 +110,7 @@ userSchema.methods.generateToken = async function () {
   return await jwt.sign(
     { _id: this._id },
     process.env.JWT_SECRET_ACCESS_TOKEN,
-    { expiresIn: "2m" }
+    { expiresIn: "1h" }
   );
 };
 

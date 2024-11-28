@@ -953,3 +953,55 @@ exports.markForReview = async (req, res) => {
     });
   }
 };
+
+
+exports.purchasedTestSeries = async (req, res) => {
+  try {
+    const { testSeriesId, userId } = req.body;
+
+    if (!testSeriesId || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: "TestSeriesId and UserId are required.",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const isAlreadyPurchased = user.purchasedTestSeries.some(
+      (series) => series.testSeriesId.toString() === testSeriesId
+    );
+
+    if (isAlreadyPurchased) {
+      return res.status(400).json({
+        success: false,
+        message: "Test series is already purchased.",
+      });
+    }
+
+    user.purchasedTestSeries.push({
+      testSeriesId,
+      attemptedTestPapers: [],
+    });
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Test series added to purchased list successfully.",
+    });
+  } catch (error) {
+    console.error("Error adding test series to purchased list:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
