@@ -399,7 +399,7 @@ exports.getMockTestPapers = async (req, res) => {
     const taggedTestPapers = testPapers.map((testPaper) => {
       let statusTag;
 
-      statusTag = attemptedTestIds.includes(testPaper._id.toString())
+      statusTag = attemptedTestIds.includes(testPaper.testPaperId.toString())
         ? ["attempted", "all"]
         : ["not-attempted", "all"];
       return {
