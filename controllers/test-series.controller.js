@@ -155,15 +155,19 @@ exports.getRecommendedTestSeries = async (req, res) => {
       },
       {
         $addFields: {
-          totalQuestions: {
-            $sum: "$testPapers.totalQuestions",
-          },
+          numericPrice: { $toDouble: "$price" },
+          numericDiscountedPrice: { $toDouble: "$discountedPrice" },
           discountPercentage: {
             $multiply: [
               {
                 $divide: [
-                  { $subtract: ["$price", "$discountedPrice"] },
-                  "$price",
+                  {
+                    $subtract: [
+                      { $toDouble: "$price" },
+                      { $toDouble: "$discountedPrice" },
+                    ],
+                  },
+                  { $toDouble: "$price" },
                 ],
               },
               100,
@@ -187,12 +191,13 @@ exports.getRecommendedTestSeries = async (req, res) => {
             },
             {
               key: "totalQuestions",
-              value: "$totalQuestions",
+              value: { $sum: "$testPapers.totalQuestions" },
               displayName: "Total Questions",
             },
           ],
         },
       },
+
       {
         $project: {
           testSeriesId: 1,
