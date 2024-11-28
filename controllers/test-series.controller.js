@@ -49,29 +49,21 @@ exports.getPurchasedTestSeries = async (req, res) => {
       });
     }
 
-    const testPaperData = await TestPaper.aggregate([
-      {
-        $match: {
-          testSeriesId: { $in: testSeriesIds },
-        },
-      },
-      {
-        $group: {
-          _id: "$testSeriesId",
-          totalQuestionsSum: { $sum: "$totalQuestions" },
-        },
-      },
-    ]);
+     const testPaperData = await TestPaper.find({
+       testSeriesId: { $in: testSeriesIds },
+     }).select(
+       "testSeriesId totalQuestions "
+     );
 
-    const totalQuestionsMap = testPaperData.reduce((acc, item) => {
-      acc[item._id] = item.totalQuestionsSum;
+
+    const totalQuestionsMap = testPaperData?.reduce((acc, item) => {
+      acc[item.testSeriesId] = item.totalQuestions; 
       return acc;
     }, {});
 
-    const purchasedTestSeries = testSeriesData.map((series) => {
-      const testSeriesId = series.testSeriesId;
-      const attemptedTestPapers =
-        purchasedSeriesMap[testSeriesId?.toString()] || [];
+    const purchasedTestSeries = testSeriesData?.map((series) => {
+      const testSeriesId = series.testSeriesId.toString();
+      const attemptedTestPapers = purchasedSeriesMap[testSeriesId] || [];
       const totalQuestions = totalQuestionsMap[testSeriesId] || 0;
 
       return {
@@ -82,7 +74,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
         testSeriesType: series.testSeriesType || "",
         subjectsTags: series.tags || [],
         allImageUrls: series.imageUrls || [],
-        completedTestCount: attemptedTestPapers.length, 
+        completedTestCount: attemptedTestPapers.length,
         indicators: [
           {
             key: "subjectIncluded",
@@ -117,7 +109,6 @@ exports.getPurchasedTestSeries = async (req, res) => {
       });
     }
 
-    // Return the response with the purchased test series data
     return res.status(200).json({
       status: "success",
       message: "Purchased Test Series fetched successfully",
@@ -131,7 +122,6 @@ exports.getPurchasedTestSeries = async (req, res) => {
     });
   }
 };
-
 
 exports.getRecommendedTestSeries = async (req, res) => {
   try {
