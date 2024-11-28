@@ -4,6 +4,7 @@ const TestPaper = require("../models/test-paper");
 const Question = require("../models/question");
 const AttemptedTest = require("../models/attempted-test");
 const User = require("../models/user");
+const mongoose = require("mongoose");
 
 exports.getPurchasedTestSeries = async (req, res) => {
   try {
@@ -510,9 +511,9 @@ exports.getAITSQuestions = async (req, res) => {
     const attemptedTest = await AttemptedTest.aggregate([
       {
         $match: {
-          userId: mongoose.Types.ObjectId(userId),
-          testSeriesId: mongoose.Types.ObjectId(testSeriesId),
-          attemptedTestId: mongoose.Types.ObjectId(testPaperId),
+          userId: new mongoose.Types.ObjectId(userId),
+          testSeriesId: new mongoose.Types.ObjectId(testSeriesId),
+          attemptedTestId: new mongoose.Types.ObjectId(testPaperId),
           testSubmitted: false,
         },
       },
@@ -567,7 +568,7 @@ exports.getAITSQuestions = async (req, res) => {
 
     const questionsBySubject = await Question.aggregate([
       {
-        $match: { testPaperId: mongoose.Types.ObjectId(testPaperId) },
+        $match: { testPaperId: new mongoose.Types.ObjectId(testPaperId) },
       },
       {
         $group: {
