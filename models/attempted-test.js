@@ -27,11 +27,11 @@ const attemptedTestSchema = new mongoose.Schema(
           ref: "Question",
           index: true,
         },
-        selectedAnswer: {
+        selectedAnswer: [{
           type: String,
-          required: true,
+          required: false,
           default: "",
-        },
+        }],
         markedForReview: {
           type: Boolean,
           required: true,

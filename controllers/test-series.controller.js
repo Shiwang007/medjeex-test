@@ -553,7 +553,7 @@ exports.getQuestions = async (req, res) => {
               marks: "$marks",
               negativeMarking: "$negativeMarking",
               markedForReview: false,
-              selectedAnswer: "",
+              selectedAnswer: [],
               isSaved: false,
             },
           },
@@ -675,7 +675,7 @@ exports.getAITSQuestions = async (req, res) => {
               marks: "$marks",
               negativeMarking: "$negativeMarking",
               markedForReview: false,
-              selectedAnswer: "",
+              selectedAnswer: [],
               isSaved: false,
             },
           },
@@ -766,7 +766,7 @@ exports.startTest = async (req, res) => {
 
     const questionArr = questions.map((question) => ({
       questionId: question.questionId,
-      selectedAnswer: "",
+      selectedAnswer: [],
       markedForReview: false,
       isSaved: false,
     }));
@@ -900,7 +900,7 @@ exports.clearAnswer = async (req, res) => {
       },
       {
         $set: {
-          "questionArr.$.selectedAnswer": "",
+          "questionArr.$.selectedAnswer": [],
           "questionArr.$.isSaved": false,
         },
       }
