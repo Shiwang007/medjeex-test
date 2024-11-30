@@ -484,6 +484,8 @@ exports.getMockTestPapers = async (req, res) => {
       });
     }
 
+    console.log(testPapers)
+
     const taggedTestPapers = testPapers.map((testPaper) => {
       let statusTag;
 
@@ -491,7 +493,7 @@ exports.getMockTestPapers = async (req, res) => {
         ? ["attempted", "all"]
         : ["not-attempted", "all"];
       return {
-        ...testPaper.toObject(),
+        ...testPaper,
         statusTag,
       };
     });
