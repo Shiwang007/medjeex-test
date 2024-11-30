@@ -210,7 +210,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
         $project: {
           testSeriesId: 1,
           title: 1,
-          allImageUrl: 1,
+          allImageUrls: 1,
           subjectsTags: 1,
           highlightPoints: 1,
           descriptionPoints: 1,
@@ -261,19 +261,19 @@ exports.getAITSTestPapers = async (req, res) => {
     const { _id } = req.user;
     const { testSeriesId, testSeriesType } = req.body;
 
-   if (!testSeriesId || !testSeriesType) {
-     return res.status(400).json({
-       success: false,
-       message: "All fields are necessary.",
-     });
-   }
+    if (!testSeriesId || !testSeriesType) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are necessary.",
+      });
+    }
 
-   if (testSeriesType !== "All-India") {
-     return res.status(400).json({
-       success: false,
-       message: "Accessing Wrong Test Series",
-     });
-   }
+    if (testSeriesType !== "All-India") {
+      return res.status(400).json({
+        success: false,
+        message: "Accessing Wrong Test Series",
+      });
+    }
 
     const user = await User.findById(_id);
     if (!user) {
@@ -498,7 +498,7 @@ exports.getMockTestPapers = async (req, res) => {
       });
     }
 
-    console.log(testPapers)
+    console.log(testPapers);
 
     const taggedTestPapers = testPapers.map((testPaper) => {
       let statusTag;
