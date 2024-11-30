@@ -259,14 +259,21 @@ exports.getRecommendedTestSeries = async (req, res) => {
 exports.getAITSTestPapers = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { testSeriesId } = req.body;
+    const { testSeriesId, testSeriesType } = req.body;
 
-    if (!testSeriesId) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are necessary.",
-      });
-    }
+   if (!testSeriesId || !testSeriesType) {
+     return res.status(400).json({
+       success: false,
+       message: "All fields are necessary.",
+     });
+   }
+
+   if (testSeriesType !== "All-India") {
+     return res.status(400).json({
+       success: false,
+       message: "Accessing Wrong Test Series",
+     });
+   }
 
     const user = await User.findById(_id);
     if (!user) {
@@ -399,12 +406,19 @@ exports.getAITSTestPapers = async (req, res) => {
 exports.getMockTestPapers = async (req, res) => {
   try {
     const { _id } = req.user;
-    const { testSeriesId } = req.body;
+    const { testSeriesId, testSeriesType } = req.body;
 
-    if (!testSeriesId) {
+    if (!testSeriesId || !testSeriesType) {
       return res.status(400).json({
         success: false,
         message: "All fields are necessary.",
+      });
+    }
+
+    if (testSeriesType !== "Mock-Test-Series") {
+      return res.status(400).json({
+        success: false,
+        message: "Accessing Wrong Test Series",
       });
     }
 
