@@ -50,15 +50,12 @@ exports.getPurchasedTestSeries = async (req, res) => {
       });
     }
 
-     const testPaperData = await TestPaper.find({
-       testSeriesId: { $in: testSeriesIds },
-     }).select(
-       "testSeriesId totalQuestions "
-     );
-
+    const testPaperData = await TestPaper.find({
+      testSeriesId: { $in: testSeriesIds },
+    }).select("testSeriesId totalQuestions ");
 
     const totalQuestionsMap = testPaperData?.reduce((acc, item) => {
-      acc[item.testSeriesId] = item.totalQuestions; 
+      acc[item.testSeriesId] = item.totalQuestions;
       return acc;
     }, {});
 
@@ -118,7 +115,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
   } catch (error) {
     console.error("Error fetching test series:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
@@ -184,7 +181,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
               100,
             ],
           },
-          allImageUrl: "$imageUrls",
+          allImageUrls: "$imageUrls",
           subjectsTags: "$tags",
           highlightPoints: "$features",
           descriptionPoints: "$description",
@@ -294,9 +291,58 @@ exports.getAITSTestPapers = async (req, res) => {
       (attempt) => attempt.toString()
     );
 
-    const testPapers = await TestPaper.find({ testSeriesId }).select(
-      "testPaperId totalMarks testName testDuration testStartTime testEndTime totalQuestions totalAttempts subjectsCovered negativeMarking"
-    );
+    const currentDateTime = new Date();
+
+    const testPapers = await TestPaper.aggregate([
+      {
+        $match: { testSeriesId: new mongoose.Types.ObjectId(testSeriesId) },
+      },
+      {
+        $lookup: {
+          from: "attemptedtests",
+          localField: "testPaperId",
+          foreignField: "attemptedTestPaperId",
+          as: "attemptedTests",
+        },
+      },
+      {
+        $addFields: {
+          attemptedTestCount: {
+            $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0],
+          },
+          attemptsRemaining: {
+            $subtract: [
+              "$totalAttempts",
+              { $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0] },
+            ],
+          },
+          isMissedOrAttempted: {
+            $in: ["$testPaperId", attemptedTestIds],
+          },
+          indicators: [
+            { key: "marks", value: { $toString: "$totalMarks" } },
+            {
+              key: "hours",
+              value: { $toString: { $divide: ["$testDuration", 60] } },
+            },
+            { key: "Questions", value: { $toString: "$totalQuestions" } },
+          ],
+        },
+      },
+      {
+        $project: {
+          testPaperId: 1,
+          testName: 1,
+          testStartTime: 1,
+          testEndTime: 1,
+          subjectsCovered: 1,
+          attemptsRemaining: 1,
+          indicators: 1,
+          isMissedOrAttempted: 1,
+          testDuration: 1,
+        },
+      },
+    ]);
 
     if (testPapers.length === 0) {
       return res.status(404).json({
@@ -305,15 +351,13 @@ exports.getAITSTestPapers = async (req, res) => {
       });
     }
 
-    const currentDateTime = new Date();
-
     const taggedTestPapers = testPapers.map((testPaper) => {
       let statusTag;
 
       if (currentDateTime < testPaper.testStartTime) {
         statusTag = ["all", "not-attempted", "upcoming"];
       } else if (currentDateTime > testPaper.testEndTime) {
-        statusTag = attemptedTestIds.includes(testPaper.testPaperId.toString())
+        statusTag = testPaper.isMissedOrAttempted
           ? ["attempted", "all"]
           : ["missed", "not-attempted", "all"];
       } else if (
@@ -324,9 +368,15 @@ exports.getAITSTestPapers = async (req, res) => {
       }
 
       return {
-        ...testPaper.toObject(),
+        ...testPaper,
         statusTag,
-        allTags: [
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        filterationTags: [
           "All",
           "Attempted",
           "Not-Attempted",
@@ -334,12 +384,8 @@ exports.getAITSTestPapers = async (req, res) => {
           "Missed",
           "Live",
         ],
-      };
-    });
-
-    return res.status(200).json({
-      success: true,
-      testPapers: taggedTestPapers,
+        testPapers: taggedTestPapers,
+      },
     });
   } catch (error) {
     console.error("Error fetching test series:", error);
@@ -385,10 +431,52 @@ exports.getMockTestPapers = async (req, res) => {
       (attempt) => attempt.toString()
     );
 
-    const testPapers = await TestPaper.find({ testSeriesId }).select(
-      "testPaperId totalMarks testName testDuration totalQuestions totalAttempts subjectsCovered negativeMarking"
-    );
-
+    const testPapers = await TestPaper.aggregate([
+      {
+        $match: { testSeriesId: new mongoose.Types.ObjectId(testSeriesId) },
+      },
+      {
+        $lookup: {
+          from: "attemptedtests",
+          localField: "testPaperId",
+          foreignField: "attemptedTestPaperId",
+          as: "attemptedTests",
+        },
+      },
+      {
+        $addFields: {
+          attemptedTestCount: {
+            $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0],
+          },
+          attemptsRemaining: {
+            $subtract: [
+              "$totalAttempts",
+              { $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0] },
+            ],
+          },
+          indicators: [
+            { key: "marks", value: { $toString: "$totalMarks" } },
+            {
+              key: "hours",
+              value: { $toString: { $divide: ["$testDuration", 60] } },
+            },
+            { key: "Questions", value: { $toString: "$totalQuestions" } },
+          ],
+        },
+      },
+      {
+        $project: {
+          testPaperId: 1,
+          testName: 1,
+          testStartTime: 1,
+          testEndTime: 1,
+          subjectsCovered: 1,
+          attemptsRemaining: 1,
+          indicators: 1,
+          testDuration: 1,
+        },
+      },
+    ]);
     if (testPapers.length === 0) {
       return res.status(404).json({
         success: false,
@@ -405,13 +493,15 @@ exports.getMockTestPapers = async (req, res) => {
       return {
         ...testPaper.toObject(),
         statusTag,
-        allTags: ["All", "Attempted", "Not-Attempted"],
       };
     });
 
     return res.status(200).json({
       success: true,
-      testPapers: taggedTestPapers,
+      data: {
+        filterationTags: ["All", "Attempted", "Not-Attempted"],
+        testPapers: taggedTestPapers,
+      },
     });
   } catch (error) {
     console.error("Error fetching test series:", error);
@@ -964,7 +1054,6 @@ exports.markForReview = async (req, res) => {
     });
   }
 };
-
 
 exports.purchasedTestSeries = async (req, res) => {
   try {

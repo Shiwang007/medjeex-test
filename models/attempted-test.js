@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const attemptedTestSchema = new mongoose.Schema(
   {
     attemptedTestId: {
@@ -31,7 +30,7 @@ const attemptedTestSchema = new mongoose.Schema(
         selectedAnswer: {
           type: String,
           required: true,
-          default: ""
+          default: "",
         },
         markedForReview: {
           type: Boolean,
@@ -42,7 +41,7 @@ const attemptedTestSchema = new mongoose.Schema(
           type: Boolean,
           required: true,
           default: false,
-        }
+        },
       },
     ],
     testStartedAt: {
@@ -57,7 +56,12 @@ const attemptedTestSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false,
-    }
+    },
+    attemptedCount: {
+      type: Number,
+      required: false,
+      default: 0
+    },
   },
   {
     timestamps: true,
@@ -65,6 +69,5 @@ const attemptedTestSchema = new mongoose.Schema(
 );
 
 const AttemptedTest = mongoose.model("AttemptedTest", attemptedTestSchema);
-
 
 module.exports = AttemptedTest;
