@@ -1,5 +1,5 @@
 const express = require("express");
-const { getPurchasedTestSeries, getQuestions, getRecommendedTestSeries, getAITSTestPapers, getMockTestPapers, purchasedTestSeries, getAITSQuestions, startTest, saveAndNext, clearAnswer, saveAndMarkForReview, markForReview} = require("../controllers/test-series.controller")
+const { getPurchasedTestSeries, getQuestions, getRecommendedTestSeries, getAITSTestPapers, getMockTestPapers, purchasedTestSeries, getAITSQuestions, startTest, saveAndNext, clearAnswer, saveAndMarkForReview, markForReview, getExamInstructions} = require("../controllers/test-series.controller")
 const { authenticate } = require("../middlewares/auth");
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.post("/aits-test-papers", authenticate, getAITSTestPapers);
 router.post("/mock-test-papers", authenticate, getMockTestPapers);
 router.post("/questions", authenticate, getAITSQuestions);
 router.post("/mock-questions", authenticate, getQuestions);
+router.get("/instructions", authenticate, getExamInstructions);
 
 //test conduction endpoints
 router.post("/start-test", authenticate, startTest);
