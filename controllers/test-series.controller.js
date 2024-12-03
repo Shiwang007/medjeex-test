@@ -242,7 +242,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Recommended Test Series fetched successfully",
-      data: { recommendedTestSeries },
+      data: { testSeries: recommendedTestSeries },
     });
   } catch (error) {
     console.error("Error fetching test series:", error);
@@ -821,8 +821,8 @@ exports.getAITSQuestions = async (req, res) => {
     }
 
     return res.status(200).json({
-      success: true,
-      questions: questionsBySubject,
+      status: "success",
+      data: { questions: questionsBySubject },
     });
   } catch (error) {
     console.error("Error fetching questions:", error);
