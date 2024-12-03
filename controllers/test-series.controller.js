@@ -6,6 +6,7 @@ const AttemptedTest = require("../models/attempted-test");
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const examInstructions = require("../utils/instructions");
+const groupTestQuestionsBySubject = require("../utils/groupQuestions");
 
 exports.getPurchasedTestSeries = async (req, res) => {
   try {
@@ -204,7 +205,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
               displayName: "Total Questions",
             },
           ],
-          totalTests: "$totalTest"
+          totalTests: "$totalTest",
         },
       },
 
@@ -225,7 +226,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
           isPurchased: 1,
           indicators: 1,
           testSeriesType: 1,
-          totalTests: 1
+          totalTests: 1,
         },
       },
     ]);
@@ -266,14 +267,14 @@ exports.getAITSTestPapers = async (req, res) => {
 
     if (!testSeriesId || !testSeriesType) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message: "All fields are necessary.",
       });
     }
 
     if (testSeriesType !== "All-India") {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message: "Accessing Wrong Test Series",
       });
     }
@@ -281,7 +282,7 @@ exports.getAITSTestPapers = async (req, res) => {
     const user = await User.findById(_id);
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "User not found.",
       });
     }
@@ -313,11 +314,11 @@ exports.getAITSTestPapers = async (req, res) => {
                 key: "hours",
                 value: { $toString: { $divide: ["$testDuration", 60] } },
                 keyInMinutes: "minutes",
-                valueInMinutes: { $toString: "$testDuration" }
+                valueInMinutes: { $toString: "$testDuration" },
               },
               { key: "Questions", value: { $toString: "$totalQuestions" } },
             ],
-            statusTag: ["all"]
+            statusTag: ["all"],
           },
         },
         {
@@ -337,13 +338,13 @@ exports.getAITSTestPapers = async (req, res) => {
 
       if (testPapers.length === 0) {
         return res.status(404).json({
-          success: false,
+          status: "error",
           message: "No test papers found.",
         });
       }
 
       return res.status(200).json({
-        success: true,
+        status: "success",
         data: {
           filterationTags: [],
           testPapers: testPapers,
@@ -387,7 +388,7 @@ exports.getAITSTestPapers = async (req, res) => {
             { key: "marks", value: { $toString: "$totalMarks" } },
             {
               key: "hours",
-              value: { $divide: ["$testDuration", 60]  },
+              value: { $divide: ["$testDuration", 60] },
               keyInMinutes: "minutes",
               valueInMinutes: "$testDuration",
             },
@@ -412,7 +413,7 @@ exports.getAITSTestPapers = async (req, res) => {
 
     if (testPapers.length === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No test papers found.",
       });
     }
@@ -440,7 +441,7 @@ exports.getAITSTestPapers = async (req, res) => {
     });
 
     return res.status(200).json({
-      success: true,
+      status: "success",
       data: {
         filterationTags: [
           "All",
@@ -453,15 +454,15 @@ exports.getAITSTestPapers = async (req, res) => {
         testPapers: taggedTestPapers,
       },
     });
-
   } catch (error) {
     console.error("Error fetching test series:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
 };
+
 
 exports.getMockTestPapers = async (req, res) => {
   try {
@@ -470,14 +471,14 @@ exports.getMockTestPapers = async (req, res) => {
 
     if (!testSeriesId || !testSeriesType) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message: "All fields are necessary.",
       });
     }
 
     if (testSeriesType !== "Mock-Test-Series") {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message: "Accessing Wrong Test Series",
       });
     }
@@ -485,7 +486,7 @@ exports.getMockTestPapers = async (req, res) => {
     const user = await User.findById(_id);
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "User not found.",
       });
     }
@@ -495,63 +496,61 @@ exports.getMockTestPapers = async (req, res) => {
     );
 
     if (!purchasedSeries) {
-      if (!purchasedSeries) {
-        const testPapers = await TestPaper.aggregate([
-          {
-            $match: { testSeriesId: new mongoose.Types.ObjectId(testSeriesId) },
+      const testPapers = await TestPaper.aggregate([
+        {
+          $match: { testSeriesId: new mongoose.Types.ObjectId(testSeriesId) },
+        },
+        {
+          $lookup: {
+            from: "attemptedtests",
+            localField: "testPaperId",
+            foreignField: "attemptedTestPaperId",
+            as: "attemptedTests",
           },
-          {
-            $lookup: {
-              from: "attemptedtests",
-              localField: "testPaperId",
-              foreignField: "attemptedTestPaperId",
-              as: "attemptedTests",
-            },
+        },
+        {
+          $addFields: {
+            attemptsRemaining: "$totalAttempts",
+            indicators: [
+              { key: "marks", value: { $toString: "$totalMarks" } },
+              {
+                key: "hours",
+                value: { $toString: { $divide: ["$testDuration", 60] } },
+              },
+              { key: "Questions", value: { $toString: "$totalQuestions" } },
+            ],
+            statusTag: [],
           },
-          {
-            $addFields: {
-              attemptsRemaining: "$totalAttempts",
-              indicators: [
-                { key: "marks", value: { $toString: "$totalMarks" } },
-                {
-                  key: "hours",
-                  value: { $toString: { $divide: ["$testDuration", 60] } },
-                },
-                { key: "Questions", value: { $toString: "$totalQuestions" } },
-              ],
-              statusTag: [],
-            },
+        },
+        {
+          $project: {
+            testPaperId: 1,
+            testName: 1,
+            testStartTime: 1,
+            testEndTime: 1,
+            subjectsCovered: 1,
+            attemptsRemaining: 1,
+            indicators: 1,
+            isMissedOrAttempted: 1,
+            testDuration: 1,
           },
-          {
-            $project: {
-              testPaperId: 1,
-              testName: 1,
-              testStartTime: 1,
-              testEndTime: 1,
-              subjectsCovered: 1,
-              attemptsRemaining: 1,
-              indicators: 1,
-              isMissedOrAttempted: 1,
-              testDuration: 1,
-            },
-          },
-        ]);
+        },
+      ]);
 
-        if (testPapers.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: "No test papers found.",
-          });
-        }
-
-        return res.status(200).json({
-          success: true,
-          data: {
-            filterationTags: [],
-            testPapers: testPapers,
-          },
+      if (testPapers.length === 0) {
+        return res.status(404).json({
+          status: "error",
+          message: "No test papers found.",
         });
       }
+
+      return res.status(200).json({
+        status: "success",
+        data: {
+          filterationTags: [],
+          testPapers: testPapers,
+        },
+      });
     }
 
     const attemptedTestIds = purchasedSeries.attemptedTestPapers.map(
@@ -604,19 +603,21 @@ exports.getMockTestPapers = async (req, res) => {
         },
       },
     ]);
+
     if (testPapers.length === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No test papers found.",
       });
     }
 
     const taggedTestPapers = testPapers.map((testPaper) => {
-      let statusTag;
-
-      statusTag = attemptedTestIds.includes(testPaper.testPaperId.toString())
+      const statusTag = attemptedTestIds.includes(
+        testPaper.testPaperId.toString()
+      )
         ? ["attempted", "all"]
         : ["not-attempted", "all"];
+
       return {
         ...testPaper,
         statusTag,
@@ -624,7 +625,7 @@ exports.getMockTestPapers = async (req, res) => {
     });
 
     return res.status(200).json({
-      success: true,
+      status: "success",
       data: {
         filterationTags: ["All", "Attempted", "Not-Attempted"],
         testPapers: taggedTestPapers,
@@ -633,7 +634,7 @@ exports.getMockTestPapers = async (req, res) => {
   } catch (error) {
     console.error("Error fetching test series:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
@@ -702,7 +703,7 @@ exports.getQuestions = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      questions: questionsBySubject,
+      data: { questions: questionsBySubject },
     });
   } catch (error) {
     console.error("Error fetching questions:", error);
@@ -779,7 +780,7 @@ exports.getAITSQuestions = async (req, res) => {
     if (attemptedTest.length > 0) {
       return res.status(200).json({
         success: true,
-        questions: attemptedTest,
+        data: { questions: attemptedTest },
       });
     }
 
@@ -837,37 +838,14 @@ exports.getAITSQuestions = async (req, res) => {
 
 exports.startTest = async (req, res) => {
   try {
-    const {
-      testPaperId,
-      testSeriesId,
-      testStartedAt,
-      testStartTime,
-      testEndTime,
-    } = req.body;
+    const { testPaperId, testSeriesId, testStartTime, testEndTime } = req.body;
     const { _id: userId } = req.user;
 
-    if (
-      !testPaperId ||
-      !testSeriesId ||
-      !testStartedAt ||
-      !testEndTime ||
-      !testStartTime
-    ) {
+    if (!testPaperId || !testSeriesId || !testEndTime || !testStartTime) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message:
           "Please provide valid test paper ID, test series ID, and start time.",
-      });
-    }
-
-    const allowedStartTime = new Date(testStartTime);
-    allowedStartTime.setMinutes(allowedStartTime.getMinutes() + 15);
-
-    if (new Date(testStartedAt) > allowedStartTime) {
-      return res.status(403).json({
-        success: false,
-        message:
-          "The test window has been closed. You cannot start the test now.",
       });
     }
 
@@ -875,8 +853,54 @@ exports.startTest = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No user found.",
+      });
+    }
+
+    const currentTime = new Date();
+    const endTime = new Date(testEndTime);
+    const durationMinutes = Math.ceil((endTime - currentTime) / 60000);
+
+    if (currentTime < new Date(testStartTime)) {
+      return res.status(403).json({
+        status: "error",
+        message: "The test is not started yet.",
+      });
+    }
+
+    if (durationMinutes <= 0) {
+      return res.status(403).json({
+        status: "error",
+        message: "The test has already ended.",
+      });
+    }
+
+    const alreadyStartedTest = await groupTestQuestionsBySubject(
+      userId,
+      testSeriesId,
+      testPaperId
+    );
+
+    if (alreadyStartedTest.length > 0) {
+      return res.status(200).json({
+        status: "success",
+        message: "Test already started. Resuming...",
+        data: {
+          questions: alreadyStartedTest,
+          duration: durationMinutes,
+        },
+      });
+    }
+
+    const allowedStartTime = new Date(testStartTime);
+    allowedStartTime.setMinutes(allowedStartTime.getMinutes() + 15);
+
+    if (currentTime > allowedStartTime) {
+      return res.status(403).json({
+        status: "error",
+        message:
+          "The test window has been closed. You cannot start the test now.",
       });
     }
 
@@ -884,7 +908,7 @@ exports.startTest = async (req, res) => {
 
     if (questions.length === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No questions found for this test paper.",
       });
     }
@@ -901,15 +925,31 @@ exports.startTest = async (req, res) => {
       testSeriesId,
       userId,
       questionArr,
-      testStartedAt,
+      testStartedAt: currentTime,
     });
 
     await attemptedTest.save();
 
-    const autoSubmitTime = new Date(testEndTime);
-    autoSubmitTime.setMinutes(autoSubmitTime.getMinutes() + 15);
+    const groupedTest = await groupTestQuestionsBySubject(
+      userId,
+      testSeriesId,
+      testPaperId
+    );
 
-    cron.schedule(autoSubmitTime, async () => {
+    if (groupedTest.length <= 0) {
+      return res.status(200).json({
+        status: "error",
+        message: "This Test Paper does not have any questions",
+      });
+    }
+
+    const autoSubmitTime = new Date(testEndTime);
+    autoSubmitTime.setMinutes(autoSubmitTime.getMinutes() + 2);
+
+    const delay = autoSubmitTime - currentTime;
+
+    setTimeout(async () => {
+      console.log("Timeout triggered");
       const testToAutoSubmit = await AttemptedTest.findOne({
         attemptedTestId: attemptedTest.attemptedTestId,
         testSeriesId: attemptedTest.testSeriesId,
@@ -922,20 +962,25 @@ exports.startTest = async (req, res) => {
         await testToAutoSubmit.save();
         console.log(`Auto-submitted test for user ${userId}`);
       }
-    });
+    }, delay);
 
     return res.status(201).json({
-      success: true,
+      status: "success",
       message: "Test started successfully.",
+      data: {
+        questions: groupedTest,
+        duration: durationMinutes,
+      },
     });
   } catch (error) {
     console.error("Error starting test:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
 };
+
 
 exports.saveAndNext = async (req, res) => {
   try {
@@ -944,7 +989,7 @@ exports.saveAndNext = async (req, res) => {
 
     if (!testPaperId || !testSeriesId || !selectedAnswer || !questionId) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message:
           "Please provide valid test paper ID, test series ID, question ID, and selected answer.",
       });
@@ -954,7 +999,7 @@ exports.saveAndNext = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No user found.",
       });
     }
@@ -976,23 +1021,24 @@ exports.saveAndNext = async (req, res) => {
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "Question or test not found.",
       });
     }
 
     return res.status(200).json({
-      success: true,
+      status: "success",
       message: "Answer saved successfully.",
     });
   } catch (error) {
     console.error("Error saving answer:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
 };
+
 
 exports.clearAnswer = async (req, res) => {
   try {
@@ -1001,9 +1047,9 @@ exports.clearAnswer = async (req, res) => {
 
     if (!testPaperId || !testSeriesId || !questionId) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message:
-          "Please provide valid test paper ID, test series ID, question ID.",
+          "Please provide valid test paper ID, test series ID, and question ID.",
       });
     }
 
@@ -1011,7 +1057,7 @@ exports.clearAnswer = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No user found.",
       });
     }
@@ -1033,23 +1079,24 @@ exports.clearAnswer = async (req, res) => {
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "Question or test not found.",
       });
     }
 
     return res.status(200).json({
-      success: true,
-      message: "Answer Cleared successfully.",
+      status: "success",
+      message: "Answer cleared successfully.",
     });
   } catch (error) {
-    console.error("Error saving answer:", error);
+    console.error("Error clearing answer:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
 };
+
 
 exports.saveAndMarkForReview = async (req, res) => {
   try {
@@ -1070,7 +1117,7 @@ exports.saveAndMarkForReview = async (req, res) => {
       typeof markedForReview !== "boolean"
     ) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message:
           "Please provide valid test paper ID, test series ID, question ID, selected answer, and markedForReview status.",
       });
@@ -1080,7 +1127,7 @@ exports.saveAndMarkForReview = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No user found.",
       });
     }
@@ -1103,19 +1150,19 @@ exports.saveAndMarkForReview = async (req, res) => {
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "Question or test not found.",
       });
     }
 
     return res.status(200).json({
-      success: true,
+      status: "success",
       message: "Answer and review status saved successfully.",
     });
   } catch (error) {
     console.error("Error saving answer and review status:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
@@ -1133,9 +1180,9 @@ exports.markForReview = async (req, res) => {
       typeof markedForReview !== "boolean"
     ) {
       return res.status(400).json({
-        success: false,
+        status: "error",
         message:
-          "Please provide valid test paper ID, test series ID, question ID.",
+          "Please provide valid test paper ID, test series ID, question ID, and markedForReview status.",
       });
     }
 
@@ -1143,7 +1190,7 @@ exports.markForReview = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "No user found.",
       });
     }
@@ -1164,19 +1211,19 @@ exports.markForReview = async (req, res) => {
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({
-        success: false,
+        status: "error",
         message: "Question or test not found.",
       });
     }
 
     return res.status(200).json({
-      success: true,
-      message: "Marked For Review successfully.",
+      status: "success",
+      message: "Marked for review successfully.",
     });
   } catch (error) {
-    console.error("Error saving answer:", error);
+    console.error("Error marking for review:", error);
     return res.status(500).json({
-      success: false,
+      status: "error",
       message: "Internal server error.",
     });
   }
@@ -1237,12 +1284,12 @@ exports.getExamInstructions = async (req, res) => {
   try {
     return res.status(200).json({
       status: "success",
-      data: examInstructions
-    })
+      data: examInstructions,
+    });
   } catch (error) {
-     return res.status(500).json({
-       success: false,
-       message: "Internal server error.",
-     });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
   }
-}
+};
