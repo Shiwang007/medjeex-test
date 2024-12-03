@@ -204,6 +204,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
               displayName: "Total Questions",
             },
           ],
+          totalTests: "$totalTest"
         },
       },
 
@@ -224,6 +225,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
           isPurchased: 1,
           indicators: 1,
           testSeriesType: 1,
+          totalTests: 1
         },
       },
     ]);
