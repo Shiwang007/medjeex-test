@@ -895,13 +895,13 @@ exports.startTest = async (req, res) => {
     const allowedStartTime = new Date(testStartTime);
     allowedStartTime.setMinutes(allowedStartTime.getMinutes() + 15);
 
-    if (currentTime > allowedStartTime) {
-      return res.status(403).json({
-        status: "error",
-        message:
-          "The test window has been closed. You cannot start the test now.",
-      });
-    }
+    // if (currentTime > allowedStartTime) {
+    //   return res.status(403).json({
+    //     status: "error",
+    //     message:
+    //       "The test window has been closed. You cannot start the test now.",
+    //   });
+    // }
 
     const questions = await Question.find({ testPaperId }).select("questionId");
 

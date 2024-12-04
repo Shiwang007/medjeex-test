@@ -10,7 +10,7 @@ router.post("/aits-test-papers", authenticate, getAITSTestPapers);
 router.post("/mock-test-papers", authenticate, getMockTestPapers);
 router.post("/questions", authenticate, getAITSQuestions);
 router.post("/mock-questions", authenticate, getQuestions);
-router.get("/instructions", authenticate, getExamInstructions);
+router.post("/instructions", authenticate, getExamInstructions);
 
 //test conduction endpoints
 router.post("/start-test", authenticate, startTest);
