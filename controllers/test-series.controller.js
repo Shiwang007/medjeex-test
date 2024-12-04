@@ -318,7 +318,7 @@ exports.getAITSTestPapers = async (req, res) => {
               },
               { key: "Questions", value: { $toString: "$totalQuestions" } },
             ],
-            statusTag: ["all"],
+            statusTag: ["All"],
           },
         },
         {
@@ -388,9 +388,9 @@ exports.getAITSTestPapers = async (req, res) => {
             { key: "marks", value: { $toString: "$totalMarks" } },
             {
               key: "hours",
-              value: { $divide: ["$testDuration", 60] },
+              value: { $toString: { $divide: ["$testDuration", 60] }},
               keyInMinutes: "minutes",
-              valueInMinutes: "$testDuration",
+              valueInMinutes: { $toString: "$testDuration"},
             },
             { key: "Questions", value: { $toString: "$totalQuestions" } },
           ],
@@ -422,16 +422,16 @@ exports.getAITSTestPapers = async (req, res) => {
       let statusTag;
 
       if (currentDateTime < testPaper.testStartTime) {
-        statusTag = ["all", "not-attempted", "upcoming"];
+        statusTag = ["All", "Not-Attempted", "Upcoming"];
       } else if (currentDateTime > testPaper.testEndTime) {
         statusTag = testPaper.isMissedOrAttempted
-          ? ["attempted", "all"]
-          : ["missed", "not-attempted", "all"];
+          ? ["Attempted", "All"]
+          : ["Missed", "Not-Attempted", "All"];
       } else if (
         currentDateTime >= testPaper.testStartTime &&
         currentDateTime <= testPaper.testEndTime
       ) {
-        statusTag = ["live", "all"];
+        statusTag = ["Live", "All"];
       }
 
       return {
@@ -462,7 +462,6 @@ exports.getAITSTestPapers = async (req, res) => {
     });
   }
 };
-
 
 exports.getMockTestPapers = async (req, res) => {
   try {
@@ -519,7 +518,7 @@ exports.getMockTestPapers = async (req, res) => {
               },
               { key: "Questions", value: { $toString: "$totalQuestions" } },
             ],
-            statusTag: [],
+            statusTag: ["All"],
           },
         },
         {
@@ -615,8 +614,8 @@ exports.getMockTestPapers = async (req, res) => {
       const statusTag = attemptedTestIds.includes(
         testPaper.testPaperId.toString()
       )
-        ? ["attempted", "all"]
-        : ["not-attempted", "all"];
+        ? ["Attempted", "All"]
+        : ["Not-Attempted", "All"];
 
       return {
         ...testPaper,
