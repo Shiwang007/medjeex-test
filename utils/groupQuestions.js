@@ -42,7 +42,7 @@ const groupTestQuestionsBySubject = async (
               question: "$questionDetails.question",
               options: "$questionDetails.options",
               marks: "$questionDetails.marks",
-              negativeMarking: "$questionDetails.negativeMarking",
+              negativeMarking: "$questionDetails.negativeMarks",
               selectedAnswer: "$questionArr.selectedAnswer",
               markedForReview: "$questionArr.markedForReview",
               isSaved: "$questionArr.isSaved",

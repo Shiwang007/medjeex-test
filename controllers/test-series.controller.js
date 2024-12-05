@@ -963,6 +963,27 @@ exports.startTest = async (req, res) => {
         testToAutoSubmit.testSubmitted = true;
         await testToAutoSubmit.save();
         console.log(`Auto-submitted test for user ${userId}`);
+
+        const purchasedTestSeriesUpdateResult = await User.updateOne(
+          {
+            _id: testToAutoSubmit.userId,
+            "purchasedTestSeries.testSeriesId": testToAutoSubmit.testSeriesId,
+          },
+          {
+            $addToSet: {
+              "purchasedTestSeries.$.attemptedTestPapers": testToAutoSubmit.attemptedTestId,
+            },
+          }
+        );
+
+        if (purchasedTestSeriesUpdateResult.nModified === 0) {
+          return res.status(404).json({
+            status: "error",
+            message:
+              "Failed to update user's purchasedTestSeries. Test series not found.",
+          });
+        }
+
       }
     }, delay);
 
@@ -1016,6 +1037,7 @@ exports.saveAndNext = async (req, res) => {
         $set: {
           "questionArr.$.selectedAnswer": selectedAnswer,
           "questionArr.$.isSaved": true,
+          "questionArr.$.markedForReview": false,
         },
       }
     );
@@ -1267,14 +1289,12 @@ exports.submitTest = async (req, res) => {
       });
     }
 
-    // Mark the test as submitted
     attemptedTest.testSubmitted = true;
     attemptedTest.testSubmittedAt = new Date();
     attemptedTest.attemptedCount += 1;
 
     await attemptedTest.save();
 
-    // Update the user's purchasedTestSeries
     const purchasedTestSeriesUpdateResult = await User.updateOne(
       {
         _id: userId,

@@ -65,8 +65,8 @@ const questionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    negativeMarking: {
-      type: Number,
+    negativeMarks: {
+      type: String,
       required: true,
     },
   },
