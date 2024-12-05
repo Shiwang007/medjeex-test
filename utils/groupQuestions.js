@@ -13,7 +13,7 @@ const groupTestQuestionsBySubject = async (
           userId: new mongoose.Types.ObjectId(userId),
           testSeriesId: new mongoose.Types.ObjectId(testSeriesId),
           attemptedTestId: new mongoose.Types.ObjectId(testPaperId),
-          testSubmitted: false
+          testSubmitted: false,
         },
       },
       {
@@ -30,6 +30,7 @@ const groupTestQuestionsBySubject = async (
       {
         $unwind: "$questionDetails",
       },
+      
       {
         $group: {
           _id: "$questionDetails.subject",

@@ -353,7 +353,7 @@ exports.getAITSTestPapers = async (req, res) => {
     }
 
     const attemptedTestIds = purchasedSeries.attemptedTestPapers.map(
-      (attempt) => attempt.toString()
+      (attempt) => attempt
     );
 
     const currentDateTime = new Date();
@@ -388,9 +388,9 @@ exports.getAITSTestPapers = async (req, res) => {
             { key: "marks", value: { $toString: "$totalMarks" } },
             {
               key: "hours",
-              value: { $toString: { $divide: ["$testDuration", 60] }},
+              value: { $toString: { $divide: ["$testDuration", 60] } },
               keyInMinutes: "minutes",
-              valueInMinutes: { $toString: "$testDuration"},
+              valueInMinutes: { $toString: "$testDuration" },
             },
             { key: "Questions", value: { $toString: "$totalQuestions" } },
           ],
@@ -431,7 +431,9 @@ exports.getAITSTestPapers = async (req, res) => {
         currentDateTime >= testPaper.testStartTime &&
         currentDateTime <= testPaper.testEndTime
       ) {
-        statusTag = ["Live", "All"];
+        statusTag = testPaper.isMissedOrAttempted
+          ? ["Live", "Attempted", "All"]
+          : ["Live", "Not-Attempted", "All"];
       }
 
       return {
@@ -895,13 +897,13 @@ exports.startTest = async (req, res) => {
     const allowedStartTime = new Date(testStartTime);
     allowedStartTime.setMinutes(allowedStartTime.getMinutes() + 15);
 
-    // if (currentTime > allowedStartTime) {
-    //   return res.status(403).json({
-    //     status: "error",
-    //     message:
-    //       "The test window has been closed. You cannot start the test now.",
-    //   });
-    // }
+    if (currentTime > allowedStartTime) {
+      return res.status(403).json({
+        status: "error",
+        message:
+          "The test window has been closed. You cannot start the test now.",
+      });
+    }
 
     const questions = await Question.find({ testPaperId }).select("questionId");
 
@@ -958,6 +960,7 @@ exports.startTest = async (req, res) => {
 
       if (testToAutoSubmit) {
         testToAutoSubmit.testSubmittedAt = new Date();
+        testToAutoSubmit.testSubmitted = true;
         await testToAutoSubmit.save();
         console.log(`Auto-submitted test for user ${userId}`);
       }
@@ -980,7 +983,6 @@ exports.startTest = async (req, res) => {
   }
 };
 
-
 exports.saveAndNext = async (req, res) => {
   try {
     const { testPaperId, testSeriesId, selectedAnswer, questionId } = req.body;
@@ -994,7 +996,7 @@ exports.saveAndNext = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ userId });
+    const user = await User.findOne({ _id: userId });
 
     if (!user) {
       return res.status(404).json({
@@ -1038,7 +1040,6 @@ exports.saveAndNext = async (req, res) => {
   }
 };
 
-
 exports.clearAnswer = async (req, res) => {
   try {
     const { testPaperId, testSeriesId, questionId } = req.body;
@@ -1052,7 +1053,7 @@ exports.clearAnswer = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ userId });
+    const user = await User.findOne({ _id: userId });
 
     if (!user) {
       return res.status(404).json({
@@ -1096,7 +1097,6 @@ exports.clearAnswer = async (req, res) => {
   }
 };
 
-
 exports.saveAndMarkForReview = async (req, res) => {
   try {
     const {
@@ -1122,7 +1122,7 @@ exports.saveAndMarkForReview = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ userId });
+    const user = await User.findOne({ _id: userId });
 
     if (!user) {
       return res.status(404).json({
@@ -1185,7 +1185,7 @@ exports.markForReview = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ userId });
+    const user = await User.findOne({ _id: userId });
 
     if (!user) {
       return res.status(404).json({
@@ -1203,7 +1203,9 @@ exports.markForReview = async (req, res) => {
       },
       {
         $set: {
+          "questionArr.$.selectedAnswer": [],
           "questionArr.$.markedForReview": markedForReview,
+          "questionArr.$.isSaved": false,
         },
       }
     );
@@ -1221,6 +1223,84 @@ exports.markForReview = async (req, res) => {
     });
   } catch (error) {
     console.error("Error marking for review:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error.",
+    });
+  }
+};
+
+exports.submitTest = async (req, res) => {
+  try {
+    const { testPaperId, testSeriesId } = req.body;
+    const { _id: userId } = req.user;
+
+    console.log(req.body);
+
+    if (!testPaperId || !testSeriesId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Please provide valid test paper ID, test series ID",
+      });
+    }
+
+    const user = await User.findOne({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "No user found.",
+      });
+    }
+
+    const attemptedTest = await AttemptedTest.findOne({
+      testSeriesId: testSeriesId,
+      attemptedTestId: testPaperId,
+      userId: userId,
+      testSubmitted: false,
+    });
+
+    if (!attemptedTest) {
+      return res.status(404).json({
+        status: "error",
+        message: "No attempted test found.",
+      });
+    }
+
+    // Mark the test as submitted
+    attemptedTest.testSubmitted = true;
+    attemptedTest.testSubmittedAt = new Date();
+    attemptedTest.attemptedCount += 1;
+
+    await attemptedTest.save();
+
+    // Update the user's purchasedTestSeries
+    const purchasedTestSeriesUpdateResult = await User.updateOne(
+      {
+        _id: userId,
+        "purchasedTestSeries.testSeriesId": testSeriesId,
+      },
+      {
+        $addToSet: {
+          "purchasedTestSeries.$.attemptedTestPapers": testPaperId,
+        },
+      }
+    );
+
+    if (purchasedTestSeriesUpdateResult.nModified === 0) {
+      return res.status(404).json({
+        status: "error",
+        message:
+          "Failed to update user's purchasedTestSeries. Test series not found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      message: "Test submitted successfully.",
+    });
+  } catch (error) {
+    console.error("Error submitting:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error.",
