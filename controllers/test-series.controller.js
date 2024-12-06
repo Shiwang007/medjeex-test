@@ -1021,6 +1021,22 @@ exports.startTestMock = async (req, res) => {
       });
     }
 
+     const alreadyStartedTest = await groupTestQuestionsBySubject(
+       userId,
+       testSeriesId,
+       testPaperId
+     );
+
+     if (alreadyStartedTest.length > 0) {
+       return res.status(200).json({
+         status: "success",
+         message: "Test already started. Resuming...",
+         data: {
+           questions: alreadyStartedTest,
+         },
+       });
+     }
+
     const questions = await Question.find({ testPaperId }).select("questionId");
 
     if (questions.length === 0) {
