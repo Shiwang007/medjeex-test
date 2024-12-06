@@ -366,19 +366,16 @@ exports.getAITSTestPapers = async (req, res) => {
         $lookup: {
           from: "attemptedtests",
           localField: "testPaperId",
-          foreignField: "attemptedTestPaperId",
+          foreignField: "attemptedTestId",
           as: "attemptedTests",
         },
       },
       {
         $addFields: {
-          attemptedTestCount: {
-            $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0],
-          },
           attemptsRemaining: {
             $subtract: [
               "$totalAttempts",
-              { $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0] },
+              { $ifNull: [{ $sum: "$attemptedTests.attemptedCount" }, 0] },
             ],
           },
           isMissedOrAttempted: {
@@ -566,15 +563,12 @@ exports.getMockTestPapers = async (req, res) => {
         $lookup: {
           from: "attemptedtests",
           localField: "testPaperId",
-          foreignField: "attemptedTestPaperId",
+          foreignField: "attemptedTestId",
           as: "attemptedTests",
         },
       },
       {
         $addFields: {
-          attemptedTestCount: {
-            $ifNull: [{ $sum: "$attemptedTests.attemptedTestCount" }, 0],
-          },
           attemptsRemaining: {
             $subtract: [
               "$totalAttempts",
@@ -897,13 +891,13 @@ exports.startTest = async (req, res) => {
     const allowedStartTime = new Date(testStartTime);
     allowedStartTime.setMinutes(allowedStartTime.getMinutes() + 15);
 
-    if (currentTime > allowedStartTime) {
-      return res.status(403).json({
-        status: "error",
-        message:
-          "You are late by more than 15 minutes. Unfortunately, you can no longer start the test as per the guidelines.",
-      });
-    }
+    // if (currentTime > allowedStartTime) {
+    //   return res.status(403).json({
+    //     status: "error",
+    //     message:
+    //       "You are late by more than 15 minutes. Unfortunately, you can no longer start the test as per the guidelines.",
+    //   });
+    // }
 
 
     const questions = await Question.find({ testPaperId }).select("questionId");
@@ -988,7 +982,7 @@ exports.startTest = async (req, res) => {
       }
     }, delay);
 
-    return res.status(201).json({
+    return res.status(200).json({
       status: "success",
       message: "Test started successfully.",
       data: {

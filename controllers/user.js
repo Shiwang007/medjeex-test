@@ -185,10 +185,10 @@ exports.login = async (req, res) => {
       console.log(!/^\d+$/.test(mobile));
       return res.status(400).json({
         status: "error",
-        message: "Failed to register user.",
+        message: "Login failed",
         error: {
           code: "INVALID_FORMAT",
-          details: "The phone number format is invalid.",
+          details: "The phone number   is invalid.",
         },
       });
     }
