@@ -641,201 +641,201 @@ exports.getMockTestPapers = async (req, res) => {
   }
 };
 
-exports.getQuestions = async (req, res) => {
-  try {
-    const { testPaperId, testSeriesId } = req.body;
-    const { _id: userId } = req.user;
+// exports.getQuestions = async (req, res) => {
+//   try {
+//     const { testPaperId, testSeriesId } = req.body;
+//     const { _id: userId } = req.user;
 
-    if (!testPaperId || !testSeriesId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Please provide valid test paper ID, test series ID, and start time.",
-      });
-    }
+//     if (!testPaperId || !testSeriesId) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Please provide valid test paper ID, test series ID, and start time.",
+//       });
+//     }
 
-    const user = await User.findOne({ _id: userId });
+//     const user = await User.findOne({ _id: userId });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "No user found.",
-      });
-    }
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No user found.",
+//       });
+//     }
 
-    const questionsBySubject = await Question.aggregate([
-      {
-        $match: { testPaperId: testPaperId },
-      },
-      {
-        $group: {
-          _id: "$subject",
-          questions: {
-            $push: {
-              questionId: "$questionId",
-              questionType: "$questionType",
-              questionFormat: "$questionFormat",
-              question: "$question",
-              options: "$options",
-              marks: "$marks",
-              negativeMarking: "$negativeMarking",
-              markedForReview: false,
-              selectedAnswer: [],
-              isSaved: false,
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          subject: "$_id",
-          questions: 1,
-        },
-      },
-    ]);
+//     const questionsBySubject = await Question.aggregate([
+//       {
+//         $match: { testPaperId: testPaperId },
+//       },
+//       {
+//         $group: {
+//           _id: "$subject",
+//           questions: {
+//             $push: {
+//               questionId: "$questionId",
+//               questionType: "$questionType",
+//               questionFormat: "$questionFormat",
+//               question: "$question",
+//               options: "$options",
+//               marks: "$marks",
+//               negativeMarking: "$negativeMarking",
+//               markedForReview: false,
+//               selectedAnswer: [],
+//               isSaved: false,
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           subject: "$_id",
+//           questions: 1,
+//         },
+//       },
+//     ]);
 
-    if (questionsBySubject.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No questions found.",
-      });
-    }
+//     if (questionsBySubject.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No questions found.",
+//       });
+//     }
 
-    return res.status(200).json({
-      success: true,
-      data: { questions: questionsBySubject },
-    });
-  } catch (error) {
-    console.error("Error fetching questions:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       data: { questions: questionsBySubject },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching questions:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error.",
+//     });
+//   }
+// };
 
-exports.getAITSQuestions = async (req, res) => {
-  try {
-    const { testPaperId, testSeriesId } = req.body;
-    const { _id: userId } = req.user;
+// exports.getAITSQuestions = async (req, res) => {
+//   try {
+//     const { testPaperId, testSeriesId } = req.body;
+//     const { _id: userId } = req.user;
 
-    if (!testPaperId || !testSeriesId) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide valid test paper ID and test series ID.",
-      });
-    }
+//     if (!testPaperId || !testSeriesId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please provide valid test paper ID and test series ID.",
+//       });
+//     }
 
-    const attemptedTest = await AttemptedTest.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(userId),
-          testSeriesId: new mongoose.Types.ObjectId(testSeriesId),
-          attemptedTestId: new mongoose.Types.ObjectId(testPaperId),
-          testSubmitted: false,
-        },
-      },
-      {
-        $unwind: "$questionArr",
-      },
-      {
-        $lookup: {
-          from: "Question",
-          localField: "questionArr.questionId",
-          foreignField: "questionId",
-          as: "questionDetails",
-        },
-      },
-      {
-        $unwind: "$questionDetails",
-      },
-      {
-        $group: {
-          _id: "$questionDetails.subject",
-          questions: {
-            $push: {
-              questionId: "$questionDetails.questionId",
-              questionType: "$questionDetails.questionType",
-              questionFormat: "$questionDetails.questionFormat",
-              question: "$questionDetails.question",
-              options: "$questionDetails.options",
-              marks: "$questionDetails.marks",
-              negativeMarking: "$questionDetails.negativeMarking",
-              selectedAnswer: "$questionArr.selectedAnswer",
-              markedForReview: "$questionArr.markedForReview",
-              isSaved: "$questionArr.isSaved",
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          subject: "$_id",
-          questions: 1,
-        },
-      },
-    ]);
+//     const attemptedTest = await AttemptedTest.aggregate([
+//       {
+//         $match: {
+//           userId: new mongoose.Types.ObjectId(userId),
+//           testSeriesId: new mongoose.Types.ObjectId(testSeriesId),
+//           attemptedTestId: new mongoose.Types.ObjectId(testPaperId),
+//           testSubmitted: false,
+//         },
+//       },
+//       {
+//         $unwind: "$questionArr",
+//       },
+//       {
+//         $lookup: {
+//           from: "Question",
+//           localField: "questionArr.questionId",
+//           foreignField: "questionId",
+//           as: "questionDetails",
+//         },
+//       },
+//       {
+//         $unwind: "$questionDetails",
+//       },
+//       {
+//         $group: {
+//           _id: "$questionDetails.subject",
+//           questions: {
+//             $push: {
+//               questionId: "$questionDetails.questionId",
+//               questionType: "$questionDetails.questionType",
+//               questionFormat: "$questionDetails.questionFormat",
+//               question: "$questionDetails.question",
+//               options: "$questionDetails.options",
+//               marks: "$questionDetails.marks",
+//               negativeMarking: "$questionDetails.negativeMarking",
+//               selectedAnswer: "$questionArr.selectedAnswer",
+//               markedForReview: "$questionArr.markedForReview",
+//               isSaved: "$questionArr.isSaved",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           subject: "$_id",
+//           questions: 1,
+//         },
+//       },
+//     ]);
 
-    if (attemptedTest.length > 0) {
-      return res.status(200).json({
-        success: true,
-        data: { questions: attemptedTest },
-      });
-    }
+//     if (attemptedTest.length > 0) {
+//       return res.status(200).json({
+//         success: true,
+//         data: { questions: attemptedTest },
+//       });
+//     }
 
-    const questionsBySubject = await Question.aggregate([
-      {
-        $match: { testPaperId: new mongoose.Types.ObjectId(testPaperId) },
-      },
-      {
-        $group: {
-          _id: "$subject",
-          questions: {
-            $push: {
-              questionId: "$_id",
-              questionType: "$questionType",
-              questionFormat: "$questionFormat",
-              question: "$question",
-              options: "$options",
-              marks: "$marks",
-              negativeMarking: "$negativeMarking",
-              markedForReview: false,
-              selectedAnswer: [],
-              isSaved: false,
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          subject: "$_id",
-          questions: 1,
-        },
-      },
-    ]);
+//     const questionsBySubject = await Question.aggregate([
+//       {
+//         $match: { testPaperId: new mongoose.Types.ObjectId(testPaperId) },
+//       },
+//       {
+//         $group: {
+//           _id: "$subject",
+//           questions: {
+//             $push: {
+//               questionId: "$_id",
+//               questionType: "$questionType",
+//               questionFormat: "$questionFormat",
+//               question: "$question",
+//               options: "$options",
+//               marks: "$marks",
+//               negativeMarking: "$negativeMarking",
+//               markedForReview: false,
+//               selectedAnswer: [],
+//               isSaved: false,
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           subject: "$_id",
+//           questions: 1,
+//         },
+//       },
+//     ]);
 
-    if (questionsBySubject.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No questions found for the provided test paper ID.",
-      });
-    }
+//     if (questionsBySubject.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No questions found for the provided test paper ID.",
+//       });
+//     }
 
-    return res.status(200).json({
-      status: "success",
-      data: { questions: questionsBySubject },
-    });
-  } catch (error) {
-    console.error("Error fetching questions:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+//     return res.status(200).json({
+//       status: "success",
+//       data: { questions: questionsBySubject },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching questions:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error.",
+//     });
+//   }
+// };
 
 exports.startTest = async (req, res) => {
   try {
@@ -901,9 +901,10 @@ exports.startTest = async (req, res) => {
       return res.status(403).json({
         status: "error",
         message:
-          "The test window has been closed. You cannot start the test now.",
+          "You are late by more than 15 minutes. Unfortunately, you can no longer start the test as per the guidelines.",
       });
     }
+
 
     const questions = await Question.find({ testPaperId }).select("questionId");
 
@@ -993,6 +994,83 @@ exports.startTest = async (req, res) => {
       data: {
         questions: groupedTest,
         duration: durationMinutes,
+      },
+    });
+  } catch (error) {
+    console.error("Error starting test:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error.",
+    });
+  }
+};
+
+exports.startTestMock = async (req, res) => {
+  try {
+    const { testPaperId, testSeriesId } = req.body;
+    const { _id: userId } = req.user;
+
+    if (!testPaperId || !testSeriesId) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "Please provide valid test paper ID, test series ID.",
+      });
+    }
+
+    const user = await User.findOne({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "No user found.",
+      });
+    }
+
+    const questions = await Question.find({ testPaperId }).select("questionId");
+
+    if (questions.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "No questions found for this test paper.",
+      });
+    }
+
+    const questionArr = questions.map((question) => ({
+      questionId: question.questionId,
+      selectedAnswer: [],
+      markedForReview: false,
+      isSaved: false,
+    }));
+
+    const attemptedTest = new AttemptedTest({
+      attemptedTestId: testPaperId,
+      testSeriesId,
+      userId,
+      questionArr,
+      testStartedAt: new Date(),
+    });
+
+    await attemptedTest.save();
+
+    const groupedTest = await groupTestQuestionsBySubject(
+      userId,
+      testSeriesId,
+      testPaperId
+    );
+
+    if (groupedTest.length <= 0) {
+      return res.status(200).json({
+        status: "error",
+        message: "This Test Paper does not have any questions",
+      });
+    }
+
+    return res.status(201).json({
+      status: "success",
+      message: "Test started successfully.",
+      data: {
+        questions: groupedTest,
       },
     });
   } catch (error) {
