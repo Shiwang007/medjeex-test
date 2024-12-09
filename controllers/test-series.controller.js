@@ -126,6 +126,7 @@ exports.getPurchasedTestSeries = async (req, res) => {
 exports.getRecommendedTestSeries = async (req, res) => {
   try {
     const { _id } = req.user;
+    const { limit } = req.body;
 
     const user = await User.findById(_id);
 
@@ -153,7 +154,7 @@ exports.getRecommendedTestSeries = async (req, res) => {
         },
       },
       {
-        $limit: 3,
+        $limit: limit,
       },
       {
         $lookup: {
