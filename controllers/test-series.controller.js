@@ -1098,7 +1098,9 @@ exports.saveAndNext = async (req, res) => {
     const { testPaperId, testSeriesId, selectedAnswer, questionId } = req.body;
     const { _id: userId } = req.user;
 
-    if (!testPaperId || !testSeriesId || !selectedAnswer || !questionId) {
+    console.log(req.body)
+
+    if (!testPaperId || !testSeriesId || selectedAnswer.length <= 0 || !questionId) {
       return res.status(400).json({
         status: "error",
         message:
@@ -1155,6 +1157,8 @@ exports.clearAnswer = async (req, res) => {
   try {
     const { testPaperId, testSeriesId, questionId } = req.body;
     const { _id: userId } = req.user;
+
+    console.log(req.body)
 
     if (!testPaperId || !testSeriesId || !questionId) {
       return res.status(400).json({
@@ -1219,10 +1223,12 @@ exports.saveAndMarkForReview = async (req, res) => {
     } = req.body;
     const { _id: userId } = req.user;
 
+    console.log(req.body)
+
     if (
       !testPaperId ||
       !testSeriesId ||
-      !selectedAnswer ||
+      selectedAnswer.length <= 0 ||
       !questionId ||
       typeof markedForReview !== "boolean"
     ) {
@@ -1282,6 +1288,8 @@ exports.markForReview = async (req, res) => {
   try {
     const { testPaperId, testSeriesId, questionId, markedForReview } = req.body;
     const { _id: userId } = req.user;
+
+    console.log(req.body)
 
     if (
       !testPaperId ||
