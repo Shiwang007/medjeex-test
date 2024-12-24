@@ -60,9 +60,18 @@ const userSchema = new mongoose.Schema({
   },
   purchasedCourses: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Courses",
-      required: false,
+      courseId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+        required: false,
+      },
+      completedLectures: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Lecture",
+          required: false,
+        },
+      ],
     },
   ],
   purchasedTestSeries: [
@@ -79,7 +88,7 @@ const userSchema = new mongoose.Schema({
           ref: "TestPaper",
           required: false,
           index: true,
-        }
+        },
       ],
     },
   ],
@@ -90,6 +99,14 @@ const userSchema = new mongoose.Schema({
       required: false,
     },
   ],
+  savedLectures: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lecture",
+      required: false,
+    },
+  ],
+
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   verifyToken: String,
